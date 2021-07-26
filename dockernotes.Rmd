@@ -1,0 +1,234 @@
+---
+title: "Docker"
+author: "Natália Faraj Murad"
+date: "17/07/2021"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+## My Docker Notes
+
+**Images** - images used to create the containers.
+
+**Docker file** - it is a text(.txt) file with instructions to do the build. 
+
+**Build** - action that creates the image.
+
+**Container** - instance of the image that presents the execution of the app or service.
+
+**Volumes** - storage limit. If the containers die, the information in the volumes persists.
+
+**Tags** - help the image versioning.
+
+**Repository** - collection of images.
+
+**Registry** - provides the access of the docker to the repositopry.
+
+**Docker Hub**
+
+**Compose** - metadata tool to create multiple containers with only one command.
+
+### Intalling docker
+```{bash, eval = FALSE}
+sudo apt install docker.io
+docker run -it hello-world ## -it = iterative
+```
+
+### Commands
+
+**run** - creates.
+
+**ps** - list.
+
+**info** - information.
+
+**exec** - execute binary from the container
+
+**stop/start** 
+
+**logs** - shows outputs and logs.
+
+**inspect** - lists configurations of the container.
+
+**pull** - download images.
+
+**push** - share or storage image in the repository.
+
+**commit** - commit notifications in the containers.
+
+**tag** - versioning.
+
+**login/logout** - log on the repository.
+
+**search** - search image.
+
+**rm** - remove container.
+
+**rmi** - remove image.
+
+**export/import** - export container; merge all layers.
+
+**save/load** - save/load docker image.
+
+### Creating the Container
+
+#### Add new instance - physical service or Virtual Machine with docker installed.
+
+```{bash, eval = FALSE}
+git clone repository/docker # download the image
+docker run --name container hello-world # test installation - create a                                               container
+docker run --name container_name -d image_name sleep 3600 # execute during
+                                                       # 1 hour
+                       #-d demo mode - without output in the screen
+docker run --name container_name -d -p 80:80
+curl localhost
+netstat -nltp # shows opened doors in the server
+docker info # summary of what is being executed
+docker status
+docker ps # shows containers running
+docker run --name new_container -p 80:80  -d image_name
+#port 80 from server redirecting to port 80 of the container
+docker images # list the images
+```
+
+### Docker exec
+```{bash, eval = FALSE}
+docker exec container mkdir test
+docker exec --help
+docker exec options <CONTAINER_NAME> <COMMANDS> <ARGUMENTS>
+docker exec -it container sh # access the container bash
+docker stop container
+docker logs container
+docker rmi -f image
+
+docker pull image # download the image again without create container to this
+docker ps -a
+docker commit --author='Author' --message="Image with commit" container_name image
+dive container # shows layers - 1st - image; 2nd - folders
+```
+
+
+### Removing
+```{bash, eval = FALSE}
+docker ps -a # show all containers including the stopped  or other status
+             # ones -a = ALL
+docker rmi nginx # RMI to remove images
+docker rm -f container_name # -f forced ##RM to remove containers
+docker images
+```
+
+### Versioning
+
+```{bash, eval = FALSE}
+docker tag container user/image_name:1.0
+docker login
+docker push user/image_name:1.0 # send your version to dockerhub
+docker search image_name
+docker run -d --name container user/image_name:1.0 sleep 3600
+
+# Export and import
+docker export image_name1 > image_export.tar
+cat image_export.tar | docker import -image_export
+docker run -d --name image2 image_export sleep 3600
+```
+
+### Networks
+
+**Bridge** - communication between containers. Containers can communite by name. Database in a Virtual Machine and application (flask) in another.
+
+```{bash, eval = FALSE}
+# Create the network
+docker network create -d bridge test_bridge
+docker network ls
+```
+
+Creates containers and add the network:
+
+```{bash, eval = FALSE}
+docker run -d --net test_bridge --name db netname
+```
+
+Create a container flask front-end:
+
+```{bash, eval = FALSE}
+docker run -d --env "DB=db" --net test_bridge -- name web -p 8000:5000 image
+# --env  - environment variable; -p 8000 = server port; 5000 mapping on app port
+docker exec -it web sh
+#-hostname = container id
+```
+
+Host network.
+
+```{bash, eval = FALSE}
+docker run -d --net host --name db test_bridge # host does not define port
+docker run -d --env "DB=db" --net host container_name # creates front-end
+netstat # opened ports
+```
+
+**Overlay Mode** - communication between separated host containers. They need to be inside a cluster. It is necessary to configure a swarm cluster. One of the machines needs to be the manager. The main machine controls the other nodes.
+
+```{bash, eval = FALSE}
+docker swarm init --advertise-addr 192.160.0.18 # it generates an automatic command that must be run in the n servers that will be part of the swarm
+docker join --token token_generated
+docker node ls
+
+# At the main server
+docker network create -d overlay test_overlay
+
+# Creates the back-end
+docker service create --network test_overlay --name db image
+# Creates front-end
+docker service create --network test_overlay -p 8000:5000 -e "DB=db" --name web user/docker_test:1.0 #image
+docker network ls
+docker ps -a
+docker logs # verify connection
+netstat
+
+# Scale service - 3 replicates
+docker service scale web=3 # number of replicates
+docker service ls
+```
+
+### Types of Storage
+
+**Volume** - virtual disk.
+
+**Bind Mounts** - shared folder between host and container.
+
+**tmpfs Mounts** - temporary.
+
+### Volume
+
+```{bash, eval = FALSE}
+docker volume create my_volume
+docker volume ls
+docker volume inspect
+
+#Create containers
+docker run -d -p 80:80 container -volume --mount source=my_volume.target=/user/share/image/ image:latest
+```
+ Files that were in the folder you mount, come together. In Bind Mounts it does not happen.
+
+
+### Bind Mounts
+
+```{bash, eval = FALSE}
+# Necessary to create a pre-existent folder
+mkdir /html
+docker run -d --name container-bind -p 80:80 -v /html/user/share/image/html image # Creates an empty folder, the html file needs to be created
+```
+
+### tmpfs
+
+```{bash, eval = FALSE}
+docker run -d --name container_tmpfs --mount type=tmpfs.destination=/cache.tmpfs-size=1000000 image sleep 3600
+
+# Access it
+docker exec -it 48 sh
+
+# When it retarts, the cache is erased
+# --memory; --cpus = it can be used to limit resources
+```
+
+#### Content of a course I took: Docker & Orchestration of Containers.

@@ -1,0 +1,294 @@
+---
+title: "My Github & Version Control Notes"
+author: "Natália Faraj Murad"
+date: "07/07/2021"
+output: html_document
+---
+
+Git is composed by three types of objects:
+
+**blobs** - metadatas of SHA object, SHA1
+
+**trees** - store the blobs, SHA1
+
+**commits** - tree, parent, author, message, timestamp, SHA1
+
+Each action you do is identified by a SHA1 (Security Hash Algorithm), then you have encrypted 40 digits code identifying changes made in a file.
+
+You can check the SHA1 code of an object with:
+
+```{bash, eval = FALSE}
+git hash "object" --stdin # returns object hash
+```
+
+
+```{bash, eval = FALSE}
+git --help command # useful to see the options of a command
+gitk # open graphic interface of git
+```
+### configs
+
+git config has three levels: system, user and project. *global* applies configuration to all repositories of the user.
+
+First time you use github, you need to configure the e-mail, user and password. Or [SSH key](https://docs.github.com/pt/github/authenticating-to-github/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent).
+
+```{bash, eval = FALSE}
+git config --global user.name "username" # set username
+git config --global user.email "email@email" # set username
+git config --core.editor "vi/nano/vim" # set text editor
+git unset --core.editor # back to default
+```
+
+### See current configs:
+
+```{bash, eval = FALSE}
+git config "username" # user configs
+git config list       # list all configs
+```
+
+### Start a repository:
+
+```{bash, eval = FALSE}
+mkdir "repository_name"
+cd "repository_name"
+git init
+```
+
+### Life Cycle of Files - status
+
+When you create a file in a folder, it will be untracked. You give the git add, it becomes staged, prepared to be commited. If you edit it, it turns in modified, then you need to give a git add again in order to make it staged again.
+
+**Untracked** - file is in the repository but not seen by git. Not marked to be sent.
+
+**Unmodified** - files not changed.
+
+**Modified** - the file was edited. It will become staged after git add command.
+
+**Staged** - area where the version will be created. Prepared to be commited. When it is commited, it turns back Unmodified.
+
+**Committed** - consolidated
+
+### Status: reports how the files are in the repository.
+
+```{bash, eval = FALSE}
+git status
+```
+
+### commit: takes the files from the repository and creates an image of them.
+
+```{bash, eval = FALSE}
+git commit -m "commit message"
+```
+
+### log:
+
+```{bash, eval = FALSE}
+git log --decorate        # show modifications from which branch to which
+                          #  other, if had merge, tags etc
+git log --author="author" # filter by the author
+git shortlog    # show alphabetically author, how many commits and what they
+                # did
+git shortlog sn # show the amount of commits and the authors
+git log --graph # show what is happening in a graphical way
+```
+
+### show:
+
+```{bash, eval = FALSE}
+git show "hash_number" # shows differences before the commit. Useful to
+                       # review actions
+```
+
+### diff:
+
+```{bash, eval = FALSE}
+git diff
+git diff --name-only # returns only the name of modified files
+git diff HEAD~1 # HEAD points the last commit of the branch
+                #~1 one previous
+```
+
+### Undo tasks:
+
+git checkout returns files and modifications when they are still in edition state. Before staged.
+
+```{bash, eval = FALSE}
+git checkout "file_name" # returns file to before the edition
+git checkout --path # undo changes that are not in stage since the last
+                    # commit - while still modified, before git add
+git checkout "commit_number" # navigate through the commits
+git checkout HEAD --path # undo alterations since last commit including the
+                         # stage
+```
+
+### reset
+
+Returns commits and files that are in staged.
+Choose always the hash one commit before the one you want to go.
+After you already add with git add, to undo:
+
+```{bash, eval = FALSE}
+git reset HEAD "file" # takes it off of stage line
+git checkout "file"   # undo
+git reset             # undo after you already commited
+git reset "commit"    # reset repo to a specific commit
+git reset --hard "commit" # reset and remove all the alterations
+```
+
+There are three kinds of reset:
+
+**--soft**  - go back the commit, the file stays on stage to be commited again.
+**--mixed** - kill the commit and put the files back to before the stage, to modified.
+**--hard**  - ignore the commit and everything that was done on it. It alters the hashs history.
+
+### commit -am
+
+Commit all modified files.
+
+```{bash, eval = FALSE}
+git commit -am "commit message"
+```
+
+### remote
+
+Link between remote and local repositories (create it in the github):
+
+```{bash, eval = FALSE}
+git remote add origin git@github.com:xx/repo
+git remote -v # show the info
+git push -u origin master # origin to where it goes/ master from where it
+                          # comes //// Send files and changes
+git push origin "branch_I_am"
+```
+
+### clone
+
+```{bash, eval = FALSE}
+git clone "repo_address"
+```
+
+### fork
+
+Useful to modify something that is not yours.
+
+### branch - mobile pointer that takes a commit. List of commits.
+
+```{bash, eval = FALSE}
+git checkout -b "branch_name" # creates a branch
+git branch # shows which branchs exist and where you are
+git checkout "branch" # takes you to the branch you want
+git branck -D "branch" # deletes the branch and commits event if it is not in
+                       # the master yet
+git branch "new_branch" # create branch
+git branch -d "branch"  # delete branch
+```
+
+### Unite branchs
+
+**merge** - creates a new commit that creates a cycle to join the branchs. Diamond shape. Always create an extra commit joining everything. Not destroyer, it does not change the history.
+
+**rebase** - applies changes by modifying the line. It avoids an extra commit, it makes a linear history but it misses the linear chronological order. Takes your commits to the end of the line.
+
+```{bash, eval = FALSE}
+git merge "branch" # applies all commits from a branck in the current branch. It will find a common commit in both branches and applies all commits the that the current branch does not have. Creates a merge commit.
+
+git rebase # commits in front of the base are temporarily removed, commits from the other branch are applied in the current branch and finally, your commits are applied one by one. It takes the changes other person did before sending your commits.
+```
+
+### gitignore
+
+It is a hidden file in the repository that we can write patterns that will be not read by git. You open the file and put the patterns inside it. There are some models.
+
+```{bash, eval = FALSE}
+vi .gitignore
+*json # it will not read jsons
+db.xml # file name - it will not be showed
+```
+
+### git stash
+
+Save the not commited changes in a file that can be called when necessary.
+Useful if you modify a file but you need to go to other branch and you will not push the changes yet. The file will not appear in git status for a while. You go to other branch and when you finish, take the stash with git stash apply and applies the saved modification.
+
+```{bash, eval = FALSE}
+git stash       # save the modifications; allows to do rebase, merge, change
+                # branch without commit
+git stash apply # apply saved changes
+git stash list  # list the stashs
+git stash clear # clear the stash
+git stash pop   # apply last stash
+```
+
+### Creating shorthands
+
+```{bash, eval = FALSE}
+git config --global alias.s status
+git config --global alias."shorcut" "command"
+```
+
+### Versioning with tags
+
+```{bash, eval = FALSE}
+git tag -a 1.0.0 -m "description_message"
+git push origin master --tags # push tags
+git push "remote" "tag"
+git tags # show tags
+```
+
+### revert
+
+Returns the commit but it does not disappear with the previous that could have a problem. Useful when you do not want to lose the work, you can see the commit later to correct it. Different from reset, because with reset you can not see the commit after.
+
+```{bash, eval = FALSE}
+git revert "commit_number"
+```
+
+### pull
+Pull the alterations from the remote repository. Keep the commits sinchronized.
+
+**fetch** download updates from remote repository but not apply it in the local repository. It allows to make a rebase of a branch instead of a merge. Fetch and rebase are better to keep the development history.
+
+**Pull = Fetch + Merge**
+
+```{bash, eval = FALSE}
+git fetch  # pull last commits
+```
+
+**push** send things to the repository.
+
+### Delete in the remote repository
+
+```{bash, eval = FALSE}
+git push origin :1.0.1 # delete
+git push origin :test # delete the branch
+```
+
+### amend
+
+Alters last commit (message or files). Before the push.
+
+```{bash, eval = FALSE}
+git commit --amend
+```
+
+### cherrypick "commit"
+
+It applies alterations of a commit in the current branch.
+
+### git blame
+
+Shows changes in a file by line - author and commit.
+
+### git bisect
+
+Binary search in the commits to find changes. Useful when too old changes and also to find changes that modified the behavior but can be easily found.
+
+```{bash, eval = FALSE}
+git bisect start
+git bisect bad "commit_not_working"
+git bisect good "commit_working"
+```
+
+### Github Pages
+
+Create a directory named with your username.github.io and put the html page inside it.
