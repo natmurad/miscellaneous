@@ -1,0 +1,156 @@
+---
+title: "Creating Streaming of Data with AWS"
+author: "Natália Faraj Murad"
+date: "22/08/2021"
+output: html_document
+---
+
+## My notes of a course by DIO.
+
+- At AWS site - *Services -> Kinesis -> Create firehose*
+
+Log data will be uploaded on this firehose.
+
+*Bucket -> Create New -> Create S3 Bucket*
+
+EC2 - management instances service by AWS.
+
+*Launch Instance -> Linux -> Create -> Instance Type*
+
+*Create New SSH Key -> Download Launch Instance*
+
+- Use PuTTygen to create ppk file needed to ssh connection.
+
+```{bash, eval = FALSE}
+puttygen arq.pem -O private -o key.ppk
+
+# if public key
+puttygen keyfile.pem -L
+```
+
+- On puTTy window:
+
+Get public DNS of instance AWS - IPv4 address
+
+*Connect-SSH Client -> Copy public DNS -> Paste on putty hostname*
+
+- Enter with Authentication Key on PuTTy
+
+*SSH-Auth -> Browse -> Import key.ppk*
+
+- Start connection
+
+*pattern login: ec2-user*
+
+On AWS-instance:
+
+- Install kinesis-agent & git to get the data cloning repositories
+```{bash, eval = FALSE}
+sudo yum install -y aws-kinesis-agent
+sudo yum install -y git
+
+# Get repository with dataset and scripts
+git clone https://github.com/cassianobrexbit/dio-live-aws-bigdata-2.git
+unzip dataset
+# Script python to process dataset line by line and generate logs
+
+# Transform script in executable
+chmod a+x loggeneratorscript.py
+
+# Create directory that will store the logs
+sudo mkdir /var/log/logdir
+
+# Access kinesis to start working
+cd /etc/aws-kinesis
+
+# Access agent.json file to set configurations
+sudo nano agent.json
+```
+
+**File agent.json**
+
+- Set firehose endpoint: *"firehose.sa-east-1.amazonaws.com"*
+
+*## Attention to the region - it can be found at infos - kinesis firehose details - region*
+
+*"flows" - directory of logs*
+
+*"filePattern":"/var/log/logdir/\*.log"*
+
+*"deliveryStream": copiar delivery stream ARN*
+
+- Permission Settings on EC2
+
+*Instances -> Select -> Actions -> Security -> Modify IAM role*
+
+*Create New IAM role -> Create role -> Select role to allow access to services*
+
+- Start kinesis agent
+
+```{bash, eval = FALSE}
+sudo service aws-kinesis-agent start
+```
+
+- Settings to start kinesis agent together with the instance:
+
+```{bash, eval = FALSE}
+sudo chkconfig aws-kinesis-agent on
+```
+
+- Service directory - Execute
+
+```{bash, eval = FALSE}
+sudo ./loggeneratorscript.py 500000 #number of logs
+tail -f /var/log/aws-kinesis-agent/aws-kinesis-agent.log
+```
+
+- Check on bucket
+
+- Create DataStream & Access Delivered Data
+- Edit json to share streaming to be consumed to other applications
+- Create a streaming for data output
+- In AWS site - *Kinesis -> Dashboards -> Data Stream -> Name_Stream*
+
+*number of shards*
+
+*Create Data Stream*
+
+- Create connection between script and stream through agent.json
+- Add lines: *kinesis.endpoint:"kinesis.sa-east-1.amazonaws.com"
+- In flows - *"kinesisStream":"Data_Stream_name"*
+*deliveryStream - firehose name*
+
+- Restart kinesis-agent
+```{bash, eval = FALSE}
+sudo service aws-kinesis-agent restart
+```
+
+It can be visualized with Glue Data Brew.
+
+**File agent.json model -  content provided by the course**
+
+```{bash, eval = FALSE}
+{
+"cloudwatch.emitMetrics": true,
+"kinesis.endpoint": "kinesis.<region>.amazonaws.com",
+"firehose.endpoint": "firehose.<region>.amazonaws.com",
+  "flows" : [
+    {
+      "filePattern": "/var/log/logdir/*.log",
+      "kinesisStream": "DataStreamName",
+      "partitionKeyOption": "RANDOM",
+      "dataProcessingOptions": [
+        {
+          "optionName": "CSVTOJSON",
+          "customFieldNames": ["country", "iso_code", "total_vaccinations", "people_fully_vaccinated", "total_vaccinations_per_hundred", "vaccines", "source_name", "source_website"]
+        }
+       ]
+    },
+    {
+      "filePattern": "/var/log/logdir/*.log",
+      "deliveryStream": "FirehoseName"
+    }
+  ]
+}
+```
+
