@@ -7,4 +7,3 @@ Projects and Exercises from courses, tutorials, tips & notes about several tools
 
 [gitnotes.html](https://htmlpreview.github.io/?https://github.com/natmurad/miscellaneous/blob/main/gitnotes.html) contains my notes about [Git and Github](www.github.com) including concepts, commands and examples.
 
-[AWSStreamNotes](https://htmlpreview.github.io/?https://github.com/natmurad/miscellaneous/blob/main/AWSStreamNotes.html) contains my note about creating Data Streaming at AWS.
