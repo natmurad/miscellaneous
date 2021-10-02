@@ -9,3 +9,4 @@ Projects and Exercises from courses, tutorials, tips & notes about several tools
 
 [linux.html](https://htmlpreview.github.io/?https://github.com/natmurad/miscellaneous/blob/main/linux.html) - a fast linux summary.
 
+[Natural Language Processing Course Notes](https://github.com/natmurad/miscellaneous/blob/main/NLP_USP_course_nltk%26spaCy.ipynb) - code we used in the course.
